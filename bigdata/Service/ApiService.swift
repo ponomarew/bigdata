@@ -121,12 +121,12 @@ class ApiService {
 				}
 				guard let profile = response.value else { return }
 				guard let shortProfle = profile.response?.players else { return }
-				print("dones", shortProfle.count)
 				completion(shortProfle)
 			}
 	}
 	
 	func createProfiles() {
+		var elasticProfiles = [ElasticProfile]()
 		getIds { friendsCount in
 			self.queueIds.forEach { id in
 				self.getProfileData(id: id) { name, date, country, city, state  in
@@ -145,7 +145,7 @@ class ApiService {
 	}
 	
 	func postToElastic(profiles: [ElasticProfile]) {
-		let realmMod = realmService.getAll().dropFirst(67000)
+		let realmMod = realmService.getAll()
 		realmMod.forEach { [weak self] profile in
 			guard let self = self else { return }
 			let concurrentQueue = DispatchQueue(label: "\(profile.id)", attributes: .concurrent)
@@ -155,7 +155,7 @@ class ApiService {
 					"gamesCount" : profile.gamesCount,
 					"name": profile.name,
 					"playtime": profile.playtime,
-					"friendsCount": profile.friendsCount + Int.random(in: 0...50),
+					"friendsCount": profile.friendsCount,
 					"country": self.countryName(countryCode: profile.country) ?? "null",
 					"city": self.getCityName(country: profile.country, stateCode: profile.state, cityCode: String(profile.city)),
 					"favoriteGame": profile.favoriteGame
